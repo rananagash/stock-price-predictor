@@ -1,0 +1,744 @@
+function updatePredictionHistory(result) {
+    const historyContainer = document.getElementById('predictionsHistory');
+    const historyItem = document.createElement('div');
+    historyItem.className = <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S&P 500 Daily Prediction Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+
+.prediction-card {
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.prediction-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 20px 20px 0 0;
+}
+
+.prediction-card.bearish::before {
+    background: linear-gradient(90deg, #f44336, #ff7043);
+}
+
+.prediction-icon {
+    font-size: 4rem;
+    margin: 20px 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.bullish { color: #4CAF50; }
+.bearish { color: #f44336; }
+
+.metric {
+    margin: 15px 0;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.confidence-bar {
+    width: 100%;
+    height: 20px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.confidence-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 10px;
+    transition: width 1s ease;
+    position: relative;
+}
+
+.confidence-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.chart-container {
+    grid-column: 1 / -1;
+    height: 400px;
+    position: relative;
+}
+
+.predictions-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(0,0,0,0.05);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.history-item:hover {
+    background: rgba(0,0,0,0.1);
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.status-bullish {
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+}
+
+.status-bearish {
+    background: linear-gradient(90deg, #f44336, #ff7043);
+}
+
+.update-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.update-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.update-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.last-updated {
+    text-align: center;
+    margin-top: 20px;
+    color: white;
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .container {
+        padding: 15px;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+    <h1>📈 S&P 500 Predictor</h1>
+    <p>Advanced ML-powered daily market predictions</p>
+</div>
+
+<div class="dashboard">
+    <div class="card prediction-card" id="predictionCard">
+        <div class="prediction-icon" id="predictionIcon">🔮</div>
+        <h2>Tomorrow's Prediction</h2>
+        <div class="metric">
+            <div class="metric-label">Market Direction</div>
+            <div class="metric-value" id="predictionText">Loading...</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Confidence</div>
+            <div class="metric-value" id="confidenceText">--%</div>
+            <div class="confidence-bar">
+                <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Current Market Data</h2>
+        <div class="metric">
+            <div class="metric-label">S&P 500 Price</div>
+            <div class="metric-value" id="currentPrice">$--.--</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Model Accuracy</div>
+            <div class="metric-value" id="modelAccuracy">--%</div>
+        </div>
+        <div class="metric">
+            <div class="metric-label">Predictions Today</div>
+            <div class="metric-value" id="predictionsCount">0</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Recent Predictions</h2>
+        <div class="predictions-history" id="predictionsHistory">
+            <div class="history-item">
+                <span>Loading predictions...</span>
+            </div>
+        </div>
+        <button class="update-btn" id="updateBtn" onclick="updatePrediction()">
+            Update Prediction
+        </button>
+    </div>
+
+    <div class="card chart-container">
+        <h2>Prediction Confidence Trend</h2>
+        <canvas id="confidenceChart"></canvas>
+    </div>
+</div>
+
+<div class="last-updated" id="lastUpdated">
+    Last updated: Never
+</div>
+</div>
+
+<script>
+// API Client for Flask Backend
+class SP500APIClient {
+    constructor() {
+        this.baseURL = 'http://localhost:5000/api';
+        this.historicalData = [];
+    }
+
+    async makePrediction() {
+        try {
+            const response = await fetch(`${this.baseURL}/predict`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            return {
+                prediction: data.prediction,
+                confidence: data.confidence,
+                currentPrice: data.current_price,
+                marketDirection: data.market_direction,
+                modelAccuracy: data.model_accuracy,
+                timestamp: data.timestamp
+            };
+        } catch (error) {
+            console.error('Error fetching prediction:', error);
+            throw error;
+        }
+    }
+
+    async getMarketData() {
+        try {
+            const response = await fetch(`${this.baseURL}/market-data`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching market data:', error);
+            throw error;
+        }
+    }
+
+    async getPredictionHistory() {
+        try {
+            const response = await fetch(`${this.baseURL}/history`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            this.historicalData = data.history || [];
+            return data;
+        } catch (error) {
+            console.error('Error fetching history:', error);
+            throw error;
+        }
+    }
+
+    async getStatus() {
+        try {
+            const response = await fetch(`${this.baseURL}/status`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching status:', error);
+            throw error;
+        }
+    }
+
+    async retrainModels() {
+        try {
+            const response = await fetch(`${this.baseURL}/retrain`, {
+                method: 'POST'
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error retraining models:', error);
+            throw error;
+        }
+    }
+}
+
+let apiClient = new SP500APIClient();
+let confidenceChart;
+let predictionCount = 0;
+
+async function initializeChart() {
+    const ctx = document.getElementById('confidenceChart').getContext('2d');
+    
+    // Initialize empty chart first
+    confidenceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Prediction Confidence %',
+                data: [],
+                borderColor: 'rgba(102, 126, 234, 1)',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        displayFormats: {
+                            day: 'MMM DD',
+                            hour: 'HH:mm'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Confidence %'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Load historical data
+    try {
+        const historyData = await apiClient.getPredictionHistory();
+        const chartData = historyData.history.map(d => ({
+            x: new Date(d.timestamp),
+            y: (d.confidence * 100).toFixed(1)
+        }));
+        confidenceChart.data.datasets[0].data = chartData;
+        confidenceChart.update();
+    } catch (error) {
+        console.error('Error loading historical data for chart:', error);
+    }
+}
+
+async function updatePrediction() {
+    const updateBtn = document.getElementById('updateBtn');
+    updateBtn.disabled = true;
+    updateBtn.innerHTML = '<div class="loading"></div>Updating...';
+
+    try {
+        // Get prediction from Flask backend
+        const result = await apiClient.makePrediction();
+        updateUI(result);
+        predictionCount++;
+        
+        // Also update market data
+        await updateMarketData();
+        
+        document.getElementById('lastUpdated').textContent = 
+            `Last updated: ${new Date(result.timestamp).toLocaleString()}`;
+        
+    } catch (error) {
+        console.error('Error updating prediction:', error);
+        showError('Unable to fetch prediction. Please check if the server is running.');
+    } finally {
+        updateBtn.disabled = false;
+        updateBtn.innerHTML = 'Update Prediction';
+    }
+}
+
+async function updateMarketData() {
+    try {
+        const marketData = await apiClient.getMarketData();
+        document.getElementById('currentPrice').textContent = `${marketData.current_price.toFixed(2)}`;
+        document.getElementById('modelAccuracy').textContent = `${(marketData.model_accuracy * 100).toFixed(1)}%`;
+        document.getElementById('predictionsCount').textContent = marketData.total_predictions || predictionCount;
+    } catch (error) {
+        console.error('Error updating market data:', error);
+    }
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #f44336;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        z-index: 1000;
+        box-shadow: 0 10px 25px rgba(244, 67, 54, 0.3);
+    `;
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    
+    setTimeout(() => {
+        document.body.removeChild(errorDiv);
+    }, 5000);
+}
+
+function updateUI(result) {
+    const predictionCard = document.getElementById('predictionCard');
+    const predictionIcon = document.getElementById('predictionIcon');
+    const predictionText = document.getElementById('predictionText');
+    const confidenceText = document.getElementById('confidenceText');
+    const confidenceFill = document.getElementById('confidenceFill');
+    const currentPrice = document.getElementById('currentPrice');
+
+    const isBullish = result.prediction === 1 || result.marketDirection === 'bullish';
+    const confidencePercent = (result.confidence * 100).toFixed(1);
+
+    // Update prediction display
+    if (isBullish) {
+        predictionCard.className = 'card prediction-card bullish';
+        predictionIcon.textContent = '📈';
+        predictionText.textContent = 'BULLISH';
+        predictionText.className = 'metric-value bullish';
+    } else {
+        predictionCard.className = 'card prediction-card bearish';
+        predictionIcon.textContent = '📉';
+        predictionText.textContent = 'BEARISH';
+        predictionText.className = 'metric-value bearish';
+    }
+
+    confidenceText.textContent = `${confidencePercent}%`;
+    confidenceFill.style.width = `${confidencePercent}%`;
+    
+    if (result.confidence < 0.6) {
+        confidenceFill.style.background = 'linear-gradient(90deg, #ff7043, #f44336)';
+    } else {
+        confidenceFill.style.background = 'linear-gradient(90deg, #4CAF50, #8BC34A)';
+    }
+
+    if (result.currentPrice) {
+        currentPrice.textContent = `${result.currentPrice.toFixed(2)}`;
+    }
+
+    if (result.modelAccuracy) {
+        document.getElementById('modelAccuracy').textContent = `${(result.modelAccuracy * 100).toFixed(1)}%`;
+    }
+
+    updatePredictionHistory(result);
+    updateChart(result);
+}
+
+function updatePredictionHistory(result) {
+    const historyContainer = document.getElementById('predictionsHistory');
+    const historyItem = document.createElement('div');
+    historyItem.className = 'history-item';
+    
+    const time = result.timestamp ? new Date(result.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+    const prediction = (result.prediction === 1 || result.marketDirection === 'bullish') ? 'Bullish' : 'Bearish';
+    const confidence = (result.confidence * 100).toFixed(1);
+    const statusClass = (result.prediction === 1 || result.marketDirection === 'bullish') ? 'status-bullish' : 'status-bearish';
+    
+    historyItem.innerHTML = `
+        <div>
+            <strong>${time}</strong><br>
+            <small>Confidence: ${confidence}%</small>
+        </div>
+        <div class="status-badge ${statusClass}">
+            ${prediction}
+        </div>
+    `;
+    
+    historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+    
+    // Keep only last 10 predictions
+    while (historyContainer.children.length > 10) {
+        historyContainer.removeChild(historyContainer.lastChild);
+    }
+}
+
+function updateChart(result) {
+    const newDataPoint = {
+        x: result.timestamp ? new Date(result.timestamp) : new Date(),
+        y: (result.confidence * 100).toFixed(1)
+    };
+    
+    confidenceChart.data.datasets[0].data.push(newDataPoint);
+    
+    // Keep only last 30 days
+    if (confidenceChart.data.datasets[0].data.length > 30) {
+        confidenceChart.data.datasets[0].data.shift();
+    }
+    
+    confidenceChart.update();
+}
+
+async function loadPredictionHistory() {
+    try {
+        const historyData = await apiClient.getPredictionHistory();
+        const historyContainer = document.getElementById('predictionsHistory');
+        
+        // Clear existing history
+        historyContainer.innerHTML = '';
+        
+        // Add recent predictions (last 10)
+        const recentHistory = historyData.history.slice(-10).reverse();
+        recentHistory.forEach(prediction => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const time = new Date(prediction.timestamp).toLocaleTimeString();
+            const pred = prediction.prediction === 1 ? 'Bullish' : 'Bearish';
+            const confidence = (prediction.confidence * 100).toFixed(1);
+            const statusClass = prediction.prediction === 1 ? 'status-bullish' : 'status-bearish';
+            
+            historyItem.innerHTML = `
+                <div>
+                    <strong>${time}</strong><br>
+                    <small>Confidence: ${confidence}%</small>
+                </div>
+                <div class="status-badge ${statusClass}">
+                    ${pred}
+                </div>
+            `;
+            
+            historyContainer.appendChild(historyItem);
+        });
+
+        if (recentHistory.length === 0) {
+            historyContainer.innerHTML = '<div class="history-item"><span>No predictions yet. Click "Update Prediction" to start.</span></div>';
+        }
+
+    } catch (error) {
+        console.error('Error loading prediction history:', error);
+        const historyContainer = document.getElementById('predictionsHistory');
+        historyContainer.innerHTML = '<div class="history-item"><span>Unable to load prediction history.</span></div>';
+    }
+}
+
+function updateChart(result) {
+    const newDataPoint = {
+        x: new Date().toISOString().split('T')[0],
+        y: (result.confidence * 100).toFixed(1)
+    };
+    
+    confidenceChart.data.datasets[0].data.push(newDataPoint);
+    
+    // Keep only last 30 days
+    if (confidenceChart.data.datasets[0].data.length > 30) {
+        confidenceChart.data.datasets[0].data.shift();
+    }
+    
+    confidenceChart.update();
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Check server status first
+        const status = await apiClient.getStatus();
+        console.log('Server status:', status);
+        
+        // Initialize chart
+        await initializeChart();
+        
+        // Load prediction history
+        await loadPredictionHistory();
+        
+        // Get initial prediction
+        await updatePrediction();
+        
+        // Update market data
+        await updateMarketData();
+        
+    } catch (error) {
+        console.error('Error initializing application:', error);
+        showError('Unable to connect to server. Please ensure the Flask backend is running on http://localhost:5000');
+        
+        // Show placeholder data
+        document.getElementById('predictionText').textContent = 'Server Offline';
+        document.getElementById('confidenceText').textContent = '--%';
+        document.getElementById('currentPrice').textContent = '$--.--';
+        document.getElementById('modelAccuracy').textContent = '--%';
+        document.getElementById('predictionsCount').textContent = '0';
+        
+        const historyContainer = document.getElementById('predictionsHistory');
+        historyContainer.innerHTML = '<div class="history-item"><span>Server offline. Please start the Flask backend.</span></div>';
+    }
+    
+    // Auto-update every 5 minutes during market hours
+    setInterval(async () => {
+        const now = new Date();
+        const hour = now.getHours();
+        const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+        
+        if (isWeekday && hour >= 9 && hour <= 16) {
+            try {
+                await updatePrediction();
+            } catch (error) {
+                console.error('Auto-update failed:', error);
+            }
+        }
+    }, 5 * 60 * 1000);
+});
+</script>
+</body>
+</html>

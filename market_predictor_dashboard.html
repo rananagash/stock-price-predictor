@@ -319,7 +319,7 @@
 <body>
     <div class="dashboard">
         <div class="header">
-            <h1>🚀 S&P 500 AI Prediction Dashboard</h1>
+            <h1> S&P 500 AI Prediction Dashboard</h1>
             <p>Advanced Machine Learning Market Predictions</p>
         </div>
 
@@ -381,61 +381,23 @@
     </button>
 
     <script>
-        // Simulated data - In real implementation, this would come from your Python backend
-        const mockData = {
-            prediction: 1,
-            probability: 0.73,
-            threshold: 0.55,
-            current_price: 5234.18,
-            current_vix: 16.8,
-            performance_metrics: {
-                precision: 0.642,
-                accuracy: 0.587,
-                total_predictions: 1247,
-                positive_predictions: 623
-            },
-            top_features: {
-                'RSI': 0.089,
-                'Price_SMA_Ratio_20': 0.076,
-                'BB_Position': 0.071,
-                'MACD': 0.068,
-                'Volume_Ratio': 0.063,
-                'Volatility_20': 0.061,
-                'Momentum_50': 0.058,
-                'VIX_Ratio': 0.055,
-                'ATR': 0.052,
-                'Williams_R': 0.049
-            },
-            model_scores: {
-                'rf': 0.634,
-                'gb': 0.651,
-                'lr': 0.598
-            }
-        };
+       async function refreshData() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/predict"); // your FastAPI endpoint
+                const data = await response.json();
 
-        // Generate mock price data for the chart
-        function generatePriceData() {
-            const data = [];
-            let price = 4800;
-            const today = new Date();
-            
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                price += (Math.random() - 0.5) * 100;
-                data.push({
-                    x: date.toISOString().split('T')[0],
-                    y: price
-                });
+                // update the UI with data from the backend
+                updatePredictionCard(data);
+                updateMetrics(data);
+                updateCharts(data);
+                updateFeatures(data);
+                updateTime();
+            } catch (error) {
+                console.error("Error fetching data:", error);
             }
-            return data;
         }
 
-        function updatePredictionCard(data) {
-            const card = document.getElementById('predictionCard');
-            const isUp = data.prediction === 1;
-            
-            card.className = `prediction-card ${isUp ? 'up' : 'down'}`;
-            card.innerHTML = `
-                <div class="prediction-icon">${isUp ? '📈' : '📉'}</div>
-                <div
+        // Run once on page load
+        refreshData();
+
+

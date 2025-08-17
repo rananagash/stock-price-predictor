@@ -383,7 +383,7 @@
     <script>
        async function refreshData() {
             try {
-                const response = await fetch("http://127.0.0.1:8000/predict"); // your FastAPI endpoint
+                const response = await fetch("http://127.0.0.1:8000/api/predict"); // your FastAPI endpoint
                 const data = await response.json();
 
                 // update the UI with data from the backend

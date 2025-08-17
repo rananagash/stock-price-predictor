@@ -93,6 +93,31 @@ class EnhancedSP500Predictor:
         ensemble_pred = 1 if ensemble_prob >= 0.6 else 0
         current_price = self.sp500_data['Close'].iloc[-1]
         return ensemble_pred, float(ensemble_prob), float(current_price)
+    
+    def get_cross_val_results(self):
+        data = self.sp500_data
+        X = data[self.feature_names].iloc[:-1]
+        y = data["Target"].iloc[:-1]
+        
+        results = {}
+        for name, model in self.models.items():
+            if name == 'lr':
+                X_scaled = self.scaler.fit_transform(X)
+                scores = cross_val_score(model, X_scaled, y, cv=5, scoring='precision')
+            else:
+                scores = cross_val_score(model, X, y, cv=5, scoring='precision')
+            results[name] = scores.mean()
+        
+        # Ensemble weighted average
+        weights = np.array(list(results.values()))
+        weights /= weights.sum()
+        ensemble_score = np.dot(list(results.values()), weights)
+        
+        return {
+            "individual_models": results,
+            "ensemble_precision": ensemble_score,
+            "baseline_accuracy": y.mean()  # Market's natural up-day probability
+        }
 
     # Example usage for web dashboard
     def make_prediction_for_web():

@@ -24,9 +24,16 @@ class EnhancedSP500Predictor:
 
     def fetch_latest_data(self, period="max"):
         ticker = yf.Ticker("^GSPC")
-        data = ticker.history(period=period)
-        data = data.reset_index().set_index("Date")
-        return data
+        try:
+            data = ticker.history(period=period)
+            if data.empty:
+                raise ValueError("No data returned from Yahoo Finance")
+            self.sp500_data = data.reset_index().set_index("Date")
+            return self.sp500_data  # Optional: return for debugging
+        except Exception as e:
+            print(f"Data fetch failed: {e}")
+            self.sp500_data = None
+            raise
 
     def prepare_features(self, data):
         """Basic features to match the old dashboard interface"""
